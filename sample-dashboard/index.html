@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sample Lease-Up Dashboard | Michael Tapia</title>
+  <meta name="description" content="A sample lease-up performance dashboard with fictional data, in the reporting format Michael Tapia uses for active lease-ups.">
+  <meta name="robots" content="noindex">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --page: #f5f2ec;
+      --surface-1: #fcfcfb;
+      --text-primary: #1b1e22;
+      --text-secondary: #4a515b;
+      --text-muted: #676661;
+      --grid: #e1e0d9;
+      --baseline: #c3c2b7;
+      --hair: #dcd6cb;
+      --border: rgba(11, 11, 11, .10);
+      --brand: #1f3a5f;
+      --series-1: #2a78d6;
+      --series-2: #eb6834;
+      --context: #a8a69f;
+      --ord-1: #86b6ef; --ord-2: #5598e7; --ord-3: #2a78d6; --ord-4: #1c5cab; --ord-5: #104281;
+      --good: #0ca30c; --good-text: #006300; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+      --sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+      --mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+      --gutter: 16px;
+    }
+    @media (min-width: 720px) { :root { --gutter: 32px; } }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 72px; }
+    body { margin: 0; background: var(--page); color: var(--text-primary); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+    a { color: inherit; }
+    h1, h2, h3, p { margin: 0; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 var(--gutter); }
+    :focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; border-radius: 3px; }
+
+    .topbar { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--page) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--hair); }
+    .topbar .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 56px; }
+    .back { display: inline-flex; align-items: center; gap: 8px; font: 500 12px/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; text-decoration: none; color: var(--text-secondary); }
+    .back:hover { color: var(--text-primary); }
+    .sections { display: flex; gap: 2px; overflow-x: auto; scrollbar-width: none; }
+    .sections a { padding: 6px 10px; border-radius: 999px; font-size: 13px; text-decoration: none; color: var(--text-secondary); white-space: nowrap; }
+    .sections a:hover { background: #ebe6dd; color: var(--text-primary); }
+    @media (max-width: 760px) { .sections { display: none; } }
+
+    .notice { margin-top: 24px; display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 10px; background: #e8eef7; color: #17304f; font-size: 14px; }
+    .notice svg { flex: none; width: 18px; height: 18px; margin-top: 2px; }
+    .head { padding: 28px 0 8px; display: grid; gap: 8px; }
+    .eyebrow { font: 500 12px/1.3 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--text-muted); }
+    .head h1 { font: 400 clamp(40px, 6vw, 64px)/1 "Instrument Serif", serif; letter-spacing: -.01em; }
+    .head p { color: var(--text-secondary); max-width: 70ch; }
+
+    section.block { padding-top: 40px; }
+    .block-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 8px 24px; margin-bottom: 14px; }
+    .block-head h2 { font: 600 20px/1.3 var(--sans); }
+    .block-head p { color: var(--text-secondary); font-size: 14px; }
+
+    .card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 14px; padding: 20px; }
+    .grid { display: grid; gap: 14px; }
+
+    /* Overview */
+    .overview { display: grid; gap: 14px; }
+    @media (min-width: 960px) { .overview { grid-template-columns: 1.1fr 2fr; } }
+    .hero-label { font-size: 14px; color: var(--text-secondary); }
+    .hero-value { font: 700 64px/1 var(--sans); letter-spacing: -.02em; margin: 10px 0 4px; }
+    .hero-sub { color: var(--text-secondary); font-size: 14px; }
+    .meter { margin-top: 18px; height: 10px; border-radius: 999px; background: #cde2fb; position: relative; overflow: hidden; }
+    .meter span { position: absolute; inset: 0 auto 0 0; background: var(--series-1); border-radius: 999px; }
+    .meter i { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--surface-1); }
+    .meter-legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+    .meter-legend b { color: var(--text-primary); font-weight: 600; }
+    .key { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+
+    .kpis { display: grid; gap: 14px; grid-template-columns: repeat(2, 1fr); }
+    @media (min-width: 640px) { .kpis { grid-template-columns: repeat(3, 1fr); } }
+    .kpi .label { font-size: 13px; color: var(--text-secondary); }
+    .kpi .value { font: 600 30px/1.1 var(--sans); margin-top: 6px; }
+    .kpi .delta { margin-top: 6px; font-size: 13px; color: var(--text-secondary); }
+    .kpi .delta.good { color: var(--good-text); }
+
+    .insights { display: grid; gap: 14px; }
+    @media (min-width: 760px) { .insights { grid-template-columns: repeat(2, 1fr); } }
+    .insight { display: grid; grid-template-columns: 28px 1fr; gap: 4px 12px; }
+    .insight .badge { grid-row: span 2; width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; }
+    .insight .badge svg { width: 16px; height: 16px; }
+    .insight h3 { font: 600 15px/1.35 var(--sans); }
+    .insight p { font-size: 14px; color: var(--text-secondary); }
+    .tag-status { display: inline-block; margin-right: 6px; font: 500 11px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-secondary); }
+
+    /* Charts */
+    .charts { display: grid; gap: 14px; }
+    @media (min-width: 960px) { .charts.two { grid-template-columns: 1fr 1fr; } }
+    .chart-title { font: 600 15px/1.3 var(--sans); }
+    .chart-sub { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 10px; font-size: 13px; color: var(--text-secondary); }
+    .legend .line-key { display: inline-block; width: 16px; height: 0; border-top: 2px solid; vertical-align: 4px; margin-right: 6px; }
+    .legend .line-key.dashed { border-top-style: dashed; }
+    .plot { position: relative; margin-top: 12px; }
+    .plot svg { display: block; width: 100%; overflow: visible; }
+    .axis text, .tick-label { font: 11px var(--sans); fill: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .gridline { stroke: var(--grid); stroke-width: 1; shape-rendering: crispEdges; }
+    .baseline { stroke: var(--baseline); stroke-width: 1; shape-rendering: crispEdges; }
+    .direct-label { font: 600 12px var(--sans); fill: var(--text-primary); }
+    .direct-label.muted { font-weight: 500; fill: var(--text-secondary); }
+    .bar { transition: opacity .15s; cursor: default; }
+    .bar:hover, .bar:focus { opacity: .8; outline: none; }
+    .hit { fill: transparent; }
+    .crosshair { stroke: var(--text-muted); stroke-width: 1; }
+
+    .tooltip { position: absolute; z-index: 5; pointer-events: none; min-width: 150px; padding: 10px 12px; border-radius: 10px; background: #fff; border: 1px solid var(--border); box-shadow: 0 8px 24px -8px rgba(0,0,0,.25); font-size: 13px; opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; }
+    .tooltip.show { opacity: 1; transform: none; }
+    .tooltip .t-head { font: 500 11px/1.2 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    .tooltip .t-row { display: flex; align-items: center; gap: 8px; line-height: 1.6; }
+    .tooltip .t-row b { font-weight: 700; font-variant-numeric: tabular-nums; }
+    .tooltip .t-row span { color: var(--text-secondary); }
+    .tooltip .t-key { width: 12px; border-top: 2px solid; }
+
+    details.table-view { margin-top: 12px; }
+    details.table-view summary { cursor: pointer; font-size: 13px; color: var(--text-secondary); width: fit-content; }
+    details.table-view summary:hover { color: var(--text-primary); }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 10px; }
+    th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+    th { font: 500 11px/1.3 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--text-muted); }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .unit-meter { display: inline-block; width: 90px; height: 8px; border-radius: 999px; background: #cde2fb; position: relative; vertical-align: middle; margin-right: 8px; overflow: hidden; }
+    .unit-meter span { position: absolute; inset: 0 auto 0 0; background: var(--series-1); border-radius: 999px; }
+
+    .actions ol { margin: 0; padding: 0; list-style: none; counter-reset: a; display: grid; gap: 12px; }
+    .actions li { counter-increment: a; display: grid; grid-template-columns: 32px 1fr; gap: 2px 12px; }
+    .actions li::before { content: counter(a); grid-row: span 2; width: 28px; height: 28px; border-radius: 50%; background: var(--brand); color: #fff; display: grid; place-items: center; font: 600 13px var(--sans); }
+    .actions h3 { font: 600 15px/1.35 var(--sans); }
+    .actions p { font-size: 14px; color: var(--text-secondary); }
+
+    .report-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+    @media (min-width: 760px) { .report-list { grid-template-columns: repeat(3, 1fr); } }
+    .report-list li { padding: 14px 16px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface-1); font-size: 14px; }
+    .report-list b { display: block; font-weight: 600; margin-bottom: 2px; }
+    .report-list span { color: var(--text-secondary); }
+
+    .big-btn { display: inline-flex; align-items: center; gap: 12px; min-height: 56px; padding: 14px 26px; border-radius: 999px; background: var(--brand); color: #fff; font: 600 17px/1.2 var(--sans); text-decoration: none; box-shadow: 0 16px 32px -16px rgba(31,58,95,.7); transition: transform .2s, background .2s; }
+    .big-btn:hover { background: #172d4a; transform: translateY(-1px); }
+    .big-btn svg { width: 20px; height: 20px; flex: none; }
+    .big-btn--ghost { background: transparent; color: var(--text-primary); border: 1px solid var(--text-primary); box-shadow: none; }
+    .big-btn--ghost:hover { background: var(--text-primary); color: #fff; }
+    .back-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 20px; }
+    .back-row p { color: var(--text-secondary); font-size: 14px; }
+    .cta-block { margin-top: 48px; padding: 40px 28px; border-radius: 18px; background: #14181d; color: #ece8e1; display: grid; gap: 18px; justify-items: start; }
+    .cta-block h2 { font: 400 clamp(32px, 4.6vw, 52px)/1.05 "Instrument Serif", serif; }
+    .cta-block p { color: #a9b0ba; max-width: 60ch; }
+    .cta-block .row { display: flex; flex-wrap: wrap; gap: 12px; }
+    .cta-block .big-btn { background: #fff; color: #14181d; }
+    .cta-block .big-btn:hover { background: #dfe5ee; }
+    .cta-block .big-btn--ghost { background: transparent; color: #fff; border-color: #fff; }
+    .cta-block .big-btn--ghost:hover { background: #fff; color: #14181d; }
+    footer { margin-top: 56px; padding: 28px 0 48px; border-top: 1px solid var(--hair); font-size: 13px; color: var(--text-secondary); }
+    footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; }
+
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .tooltip { transition: none; } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="back" href="../index.html#results">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        Michael Tapia · Portfolio
+      </a>
+      <nav class="sections" aria-label="Dashboard sections">
+        <a href="#overview">Overview</a>
+        <a href="#momentum">Momentum</a>
+        <a href="#funnel">Funnel</a>
+        <a href="#sources">Lead sources</a>
+        <a href="#units">Unit types</a>
+        <a href="#actions">Actions</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="notice" role="note">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+      <p><strong>Sample data.</strong> The building and every number on this page are fictional. The layout follows the weekly reporting I use for active lease-ups; no client data is shown.</p>
+    </div>
+
+    <div class="back-row">
+      <a class="big-btn" href="../index.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+        Back to the proposal
+      </a>
+      <p>A sample of the reporting format in the Forth Gen proposal.</p>
+    </div>
+
+    <div class="head">
+      <p class="eyebrow">Lease-up performance dashboard · Week 16 snapshot</p>
+      <h1>Sample Residences</h1>
+      <p>A fictional 120-home purpose-built rental in Metro Vancouver, 16 weeks into lease-up. This view answers the owner's first questions: how full are we, how fast are we leasing, where do leads come from, and what should change this week.</p>
+    </div>
+
+    <!-- Overview -->
+    <section class="block" id="overview" aria-labelledby="ov-title">
+      <div class="block-head"><h2 id="ov-title">Overview</h2><p>Weeks 1 to 16 · 120 homes</p></div>
+      <div class="overview">
+        <div class="card">
+          <p class="hero-label">Committed occupancy</p>
+          <p class="hero-value" id="hero-value">82%</p>
+          <p class="hero-sub" id="hero-sub">98 of 120 homes leased or approved</p>
+          <div class="meter" aria-hidden="true"><span id="meter-committed"></span><i id="meter-gap"></i></div>
+          <div class="meter-legend">
+            <span><span class="key" style="background: var(--series-1)"></span>Committed <b id="ml-committed">98</b></span>
+            <span><span class="key" style="background: #cde2fb"></span>Available <b id="ml-available">22</b></span>
+            <span>Projected <b id="ml-projected">85%</b> if the 4 applications in review are approved</span>
+          </div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+      </div>
+
+      <div class="card" style="margin-top:14px">
+        <div class="block-head" style="margin-bottom:12px"><h2 style="font-size:16px">What stands out</h2><p>The signal behind the numbers</p></div>
+        <div class="insights">
+          <div class="insight">
+            <span class="badge" style="background:#fdeee7;color:#b5491f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+            <h3><span class="tag-status">Watch</span>Two-bedrooms are the bottleneck</h3>
+            <p>73% committed versus 90% for studios, and 31 days on average to lease. Most of the remaining vacancy is here.</p>
+          </div>
+          <div class="insight">
+            <span class="badge" style="background:#e3f4e3;color:#006300"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m5 12 4 4 10-10"/></svg></span>
+            <h3><span class="tag-status">Strong</span>Tours convert</h3>
+            <p>43% of tours turn into applications. The constraint is tour volume, not closing.</p>
+          </div>
+          <div class="insight">
+            <span class="badge" style="background:#e3f4e3;color:#006300"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m5 12 4 4 10-10"/></svg></span>
+            <h3><span class="tag-status">Strong</span>The building website is the best channel</h3>
+            <p>It brings 34% of all leads and 43% of all tours, at $4 per lead.</p>
+          </div>
+          <div class="insight">
+            <span class="badge" style="background:#fdeee7;color:#b5491f"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>
+            <h3><span class="tag-status">Watch</span>Lead volume has halved since launch</h3>
+            <p>Weekly leads fell from 135 in week 2 to 60 in week 16. Still on pace, but the margin is shrinking.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Momentum -->
+    <section class="block" id="momentum" aria-labelledby="mo-title">
+      <div class="block-head"><h2 id="mo-title">Leasing momentum</h2><p>Is the building on pace to stabilize?</p></div>
+      <div class="charts two">
+        <div class="card">
+          <p class="chart-title">Homes committed vs. target pace</p>
+          <p class="chart-sub">Cumulative leased + approved, by week. Target: 120 homes by week 20.</p>
+          <div class="legend"><span><span class="line-key" style="border-color:var(--series-1)"></span>Committed</span><span><span class="line-key dashed" style="border-color:var(--context)"></span>Target pace</span></div>
+          <div class="plot" id="chart-pace"></div>
+          <details class="table-view"><summary>Show as table</summary><div class="scroll" id="table-pace"></div></details>
+        </div>
+        <div class="card">
+          <p class="chart-title">Weekly tours and applications</p>
+          <p class="chart-sub">Count per week.</p>
+          <div class="legend"><span><span class="key" style="background:var(--series-1)"></span>Tours</span><span><span class="key" style="background:var(--series-2)"></span>Applications</span></div>
+          <div class="plot" id="chart-weekly"></div>
+          <details class="table-view"><summary>Show as table</summary><div class="scroll" id="table-weekly"></div></details>
+        </div>
+      </div>
+    </section>
+
+    <!-- Funnel -->
+    <section class="block" id="funnel" aria-labelledby="fu-title">
+      <div class="block-head"><h2 id="fu-title">Conversion funnel</h2><p>Lead to signed lease, weeks 1 to 16</p></div>
+      <div class="card">
+        <div class="plot" id="chart-funnel"></div>
+        <details class="table-view"><summary>Show as table</summary><div class="scroll" id="table-funnel"></div></details>
+      </div>
+    </section>
+
+    <!-- Sources -->
+    <section class="block" id="sources" aria-labelledby="so-title">
+      <div class="block-head"><h2 id="so-title">Lead sources</h2><p>Where leads come from, and which ones tour</p></div>
+      <div class="charts two">
+        <div class="card">
+          <p class="chart-title">Leads by source</p>
+          <p class="chart-sub">All inquiries, weeks 1 to 16.</p>
+          <div class="plot" id="chart-sources"></div>
+        </div>
+        <div class="card">
+          <p class="chart-title">Tour rate by source</p>
+          <p class="chart-sub">Share of each source's leads that booked a tour.</p>
+          <div class="plot" id="chart-tourrate"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <p class="chart-title">Source detail</p>
+        <div class="scroll" id="table-sources"></div>
+      </div>
+    </section>
+
+    <!-- Units -->
+    <section class="block" id="units" aria-labelledby="un-title">
+      <div class="block-head"><h2 id="un-title">Unit types</h2><p>Where the remaining vacancy sits</p></div>
+      <div class="card"><div class="scroll" id="table-units"></div></div>
+    </section>
+
+    <!-- Actions -->
+    <section class="block" id="actions" aria-labelledby="ac-title">
+      <div class="block-head"><h2 id="ac-title">Recommended actions</h2><p>Proposed for the week 17 owner meeting</p></div>
+      <div class="card actions">
+        <ol>
+          <li><h3>Test a two-bedroom incentive for three weeks</h3><p>For example, one month free on a 13-month lease. Review tours and applications weekly and stop early if two-bedroom velocity doesn't improve.</p></li>
+          <li><h3>Shift listing spend toward the channels that tour</h3><p>Referrals and the building website tour at 31% and 22%. Social media tours at 9%; cut its spend and boost the website.</p></li>
+          <li><h3>Add Saturday open houses</h3><p>Tours convert well, so more tour slots should mean more leases. Two open houses a month, promoted to all open leads.</p></li>
+          <li><h3>Hold a one-hour response time on weekday leads</h3><p>With fewer leads coming in, every inquiry matters. Track response time in the weekly report.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- Weekly report -->
+    <section class="block" aria-labelledby="re-title">
+      <div class="block-head"><h2 id="re-title">What the owner gets every week</h2></div>
+      <ul class="report-list">
+        <li><b>Occupancy &amp; pace</b><span>Committed, projected and target, with the trend.</span></li>
+        <li><b>Funnel</b><span>Leads, tours, applications, approvals and leases, with conversion at each step.</span></li>
+        <li><b>Lead sources</b><span>Volume and quality by channel, so spend follows results.</span></li>
+        <li><b>Pricing</b><span>Rent achieved by unit type against the market and the pro forma.</span></li>
+        <li><b>Prospect feedback</b><span>Objections heard on tours and why applicants chose elsewhere.</span></li>
+        <li><b>Recommendations</b><span>What to change this week, and what we'll measure.</span></li>
+      </ul>
+    </section>
+    <section class="cta-block" aria-labelledby="cta-title">
+      <p class="eyebrow" style="color:#a9b0ba">Michael Tapia · Lease-ups &amp; leasing</p>
+      <h2 id="cta-title">Want this reporting for your building?</h2>
+      <p>I run the leasing and send the owner a report like this every week: occupancy, pace, funnel, lead sources, pricing and what to change next.</p>
+      <div class="row">
+        <a class="big-btn" href="../index.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+          Back to the proposal
+        </a>
+        <a class="big-btn big-btn--ghost" href="../index.html#contact">Contact Michael</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <p>Sample dashboard by Michael Tapia, Vancouver. Fictional data for illustration.</p>
+      <p><a href="../index.html#contact">Talk to Michael</a></p>
+    </div>
+  </footer>
+
+  <script>
+  (() => {
+    "use strict";
+    const NS = "http://www.w3.org/2000/svg";
+    const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    const fmt = (n) => n.toLocaleString("en-CA");
+    const pct = (n) => `${Math.round(n * 100)}%`;
+
+    /* ---------------- Fictional data ---------------- */
+    const HOMES = 120;
+    const weeks = Array.from({ length: 16 }, (_, i) => i + 1);
+    const leads = [120, 135, 128, 110, 98, 92, 95, 88, 84, 80, 78, 74, 70, 66, 62, 60];
+    const tours = [14, 22, 24, 20, 18, 17, 18, 16, 15, 15, 14, 13, 12, 12, 10, 10];
+    const apps = [4, 9, 11, 9, 8, 8, 8, 7, 7, 7, 6, 6, 5, 5, 4, 4];
+    const commits = [3, 8, 10, 9, 8, 7, 7, 6, 6, 6, 5, 5, 5, 5, 4, 4];
+    const committedCum = commits.reduce((a, v, i) => (a.push((a[i - 1] || 0) + v), a), []);
+    const target = weeks.map((w) => Math.min(HOMES, w * 6));
+    const sum = (a) => a.reduce((x, y) => x + y, 0);
+    const totals = { leads: sum(leads), tours: sum(tours), apps: sum(apps), approved: 98, signed: 92, committed: committedCum[15], review: 4 };
+    const funnel = [
+      { stage: "Leads", value: totals.leads, note: "All inquiries" },
+      { stage: "Tours", value: totals.tours, note: `${pct(totals.tours / totals.leads)} of leads` },
+      { stage: "Applications", value: totals.apps, note: `${pct(totals.apps / totals.tours)} of tours` },
+      { stage: "Approved", value: totals.approved, note: `${pct(totals.approved / totals.apps)} of applications` },
+      { stage: "Leases signed", value: totals.signed, note: `${pct(totals.signed / totals.approved)} of approved` },
+    ];
+    const sources = [
+      { name: "Building website", leads: 490, tours: 108, cpl: "$4" },
+      { name: "Listing sites", leads: 360, tours: 50, cpl: "$11" },
+      { name: "Social media", leads: 230, tours: 20, cpl: "$9" },
+      { name: "Referrals", leads: 130, tours: 40, cpl: "$0" },
+      { name: "Signage & walk-ins", leads: 115, tours: 24, cpl: "$2" },
+      { name: "Other", leads: 115, tours: 8, cpl: "n/a" },
+    ];
+    const units = [
+      { type: "Studio", homes: 30, committed: 27, rent: 2050, days: 18 },
+      { type: "1 bedroom", homes: 54, committed: 46, rent: 2480, days: 21 },
+      { type: "2 bedroom", homes: 30, committed: 22, rent: 3350, days: 31 },
+      { type: "3 bedroom", homes: 6, committed: 3, rent: 4300, days: 44 },
+    ];
+    const avgDays = Math.round(sum(units.map((u) => u.committed * u.days)) / sum(units.map((u) => u.committed)));
+
+    /* ---------------- Overview ---------------- */
+    const committedShare = totals.committed / HOMES;
+    const projectedShare = (totals.committed + totals.review) / HOMES;
+    document.getElementById("hero-value").textContent = pct(committedShare);
+    document.getElementById("hero-sub").textContent = `${totals.committed} of ${HOMES} homes leased or approved`;
+    document.getElementById("meter-committed").style.width = `${committedShare * 100}%`;
+    document.getElementById("meter-gap").style.left = `calc(${committedShare * 100}% - 1px)`;
+    document.getElementById("ml-committed").textContent = totals.committed;
+    document.getElementById("ml-available").textContent = HOMES - totals.committed;
+    document.getElementById("ml-projected").textContent = pct(projectedShare);
+
+    const kpis = [
+      { label: "Leads", value: fmt(totals.leads), delta: `${leads[15]} this week` },
+      { label: "Tours", value: fmt(totals.tours), delta: `${pct(totals.tours / totals.leads)} of leads toured` },
+      { label: "Tour to application", value: pct(totals.apps / totals.tours), delta: "Closing rate after a tour", good: true },
+      { label: "Leases signed", value: fmt(totals.signed), delta: `+${commits[15]} committed this week` },
+      { label: "Avg. days to lease", value: `${avgDays}`, delta: "From listing to approval" },
+      { label: "Vs. target pace", value: `+${committedCum[15] - target[15]}`, delta: `${committedCum[15]} committed vs ${target[15]} target`, good: true },
+    ];
+    const kpiWrap = document.getElementById("kpis");
+    kpis.forEach((k) => {
+      const card = document.createElement("div");
+      card.className = "card kpi";
+      const l = document.createElement("p"); l.className = "label"; l.textContent = k.label;
+      const v = document.createElement("p"); v.className = "value"; v.textContent = k.value;
+      const d = document.createElement("p"); d.className = "delta" + (k.good ? " good" : ""); d.textContent = k.delta;
+      card.append(l, v, d);
+      kpiWrap.append(card);
+    });
+
+    /* ---------------- Helpers ---------------- */
+    const el = (tag, attrs = {}, parent) => {
+      const n = document.createElementNS(NS, tag);
+      for (const [k, v] of Object.entries(attrs)) n.setAttribute(k, v);
+      if (parent) parent.append(n);
+      return n;
+    };
+    const niceMax = (v, step) => Math.ceil(v / step) * step;
+    const topRounded = (x, y, w, h, r = 4) => {
+      r = Math.min(r, w / 2, h);
+      return `M${x},${y + h}V${y + r}Q${x},${y} ${x + r},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h}Z`;
+    };
+    const rightRounded = (x, y, w, h, r = 4) => {
+      r = Math.min(r, h / 2, w);
+      return `M${x},${y}H${x + w - r}Q${x + w},${y} ${x + w},${y + r}V${y + h - r}Q${x + w},${y + h} ${x + w - r},${y + h}H${x}Z`;
+    };
+
+    function tooltipFor(plot) {
+      const tip = document.createElement("div");
+      tip.className = "tooltip";
+      tip.setAttribute("role", "status");
+      plot.append(tip);
+      return {
+        show(x, y, head, rows) {
+          tip.replaceChildren();
+          const h = document.createElement("div"); h.className = "t-head"; h.textContent = head; tip.append(h);
+          rows.forEach((r) => {
+            const row = document.createElement("div"); row.className = "t-row";
+            if (r.color) { const k = document.createElement("i"); k.className = "t-key"; k.style.borderColor = r.color; if (r.dashed) k.style.borderTopStyle = "dashed"; row.append(k); }
+            const b = document.createElement("b"); b.textContent = r.value;
+            const s = document.createElement("span"); s.textContent = r.label;
+            row.append(b, s); tip.append(row);
+          });
+          const pw = plot.clientWidth;
+          tip.classList.add("show");
+          const tw = tip.offsetWidth;
+          let left = x + 14;
+          if (left + tw > pw) left = x - tw - 14;
+          tip.style.left = `${Math.max(0, left)}px`;
+          tip.style.top = `${Math.max(0, y - 20)}px`;
+        },
+        hide() { tip.classList.remove("show"); },
+      };
+    }
+
+    function table(container, headers, rows, numeric = []) {
+      const t = document.createElement("table");
+      const thead = t.createTHead().insertRow();
+      headers.forEach((h, i) => { const th = document.createElement("th"); th.textContent = h; if (numeric.includes(i)) th.className = "num"; thead.append(th); });
+      const tb = t.createTBody();
+      rows.forEach((r) => { const tr = tb.insertRow(); r.forEach((c, i) => { const td = tr.insertCell(); if (c instanceof Node) td.append(c); else td.textContent = c; if (numeric.includes(i)) td.className = "num"; }); });
+      container.replaceChildren(t);
+    }
+
+    /* ---------------- Line chart: committed vs target ---------------- */
+    function drawPace() {
+      const plot = document.getElementById("chart-pace");
+      plot.replaceChildren();
+      const W = plot.clientWidth, H = 260;
+      const m = { t: 12, r: 92, b: 28, l: 34 };
+      const iw = W - m.l - m.r, ih = H - m.t - m.b;
+      const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": `Line chart: homes committed reached ${committedCum[15]} by week 16, against a target pace of ${target[15]}.` }, plot);
+      const ymax = HOMES;
+      const x = (w) => m.l + ((w - 1) / 15) * iw;
+      const y = (v) => m.t + ih - (v / ymax) * ih;
+      [0, 30, 60, 90, 120].forEach((v) => {
+        el("line", { class: v === 0 ? "baseline" : "gridline", x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v) }, svg);
+        const t = el("text", { class: "tick-label", x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg); t.textContent = v;
+      });
+      [1, 4, 8, 12, 16].forEach((w) => { const t = el("text", { class: "tick-label", x: x(w), y: H - 8, "text-anchor": "middle" }, svg); t.textContent = `Wk ${w}`; });
+      const line = (arr) => arr.map((v, i) => `${i ? "L" : "M"}${x(i + 1).toFixed(1)},${y(v).toFixed(1)}`).join("");
+      el("path", { d: `${line(committedCum)}L${x(16)},${y(0)}L${x(1)},${y(0)}Z`, fill: css("--series-1"), "fill-opacity": .1, stroke: "none" }, svg);
+      el("path", { d: line(target), fill: "none", stroke: css("--context"), "stroke-width": 2, "stroke-dasharray": "5 5", "stroke-linecap": "round" }, svg);
+      el("path", { d: line(committedCum), fill: "none", stroke: css("--series-1"), "stroke-width": 2, "stroke-linejoin": "round", "stroke-linecap": "round" }, svg);
+      el("circle", { cx: x(16), cy: y(committedCum[15]), r: 5, fill: css("--series-1"), stroke: css("--surface-1"), "stroke-width": 2 }, svg);
+      const l1 = el("text", { class: "direct-label", x: x(16) + 10, y: y(committedCum[15]) - 2 }, svg); l1.textContent = `${committedCum[15]} committed`;
+      const l2 = el("text", { class: "direct-label muted", x: x(16) + 10, y: y(target[15]) + 14 }, svg); l2.textContent = `${target[15]} target`;
+
+      const cross = el("line", { class: "crosshair", y1: m.t, y2: m.t + ih, opacity: 0 }, svg);
+      const dot = el("circle", { r: 5, fill: css("--series-1"), stroke: css("--surface-1"), "stroke-width": 2, opacity: 0 }, svg);
+      const tip = tooltipFor(plot);
+      const hit = el("rect", { class: "hit", x: m.l, y: m.t, width: iw, height: ih, tabindex: 0, "aria-label": "Explore weekly values with the arrow keys" }, svg);
+      let idx = 15;
+      const showAt = (i) => {
+        idx = Math.max(0, Math.min(15, i));
+        const cx = x(idx + 1);
+        cross.setAttribute("x1", cx); cross.setAttribute("x2", cx); cross.setAttribute("opacity", 1);
+        dot.setAttribute("cx", cx); dot.setAttribute("cy", y(committedCum[idx])); dot.setAttribute("opacity", 1);
+        tip.show(cx, y(committedCum[idx]), `Week ${idx + 1}`, [
+          { value: committedCum[idx], label: "Committed", color: css("--series-1") },
+          { value: target[idx], label: "Target pace", color: css("--context"), dashed: true },
+        ]);
+      };
+      const hide = () => { cross.setAttribute("opacity", 0); dot.setAttribute("opacity", 0); tip.hide(); };
+      hit.addEventListener("pointermove", (e) => { const r = svg.getBoundingClientRect(); const px = (e.clientX - r.left) * (W / r.width); showAt(Math.round(((px - m.l) / iw) * 15)); });
+      hit.addEventListener("pointerleave", hide);
+      hit.addEventListener("focus", () => showAt(idx));
+      hit.addEventListener("blur", hide);
+      hit.addEventListener("keydown", (e) => { if (e.key === "ArrowLeft") { showAt(idx - 1); e.preventDefault(); } if (e.key === "ArrowRight") { showAt(idx + 1); e.preventDefault(); } });
+    }
+
+    /* ---------------- Grouped columns: tours & applications ---------------- */
+    function drawWeekly() {
+      const plot = document.getElementById("chart-weekly");
+      plot.replaceChildren();
+      const W = plot.clientWidth, H = 260;
+      const m = { t: 12, r: 8, b: 28, l: 34 };
+      const iw = W - m.l - m.r, ih = H - m.t - m.b;
+      const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": "Column chart of weekly tours and applications, weeks 1 to 16. Tours peaked at 24 in week 3; applications peaked at 11." }, plot);
+      const ymax = niceMax(Math.max(...tours), 5);
+      const y = (v) => m.t + ih - (v / ymax) * ih;
+      for (let v = 0; v <= ymax; v += 5) {
+        el("line", { class: v === 0 ? "baseline" : "gridline", x1: m.l, x2: m.l + iw, y1: y(v), y2: y(v) }, svg);
+        const t = el("text", { class: "tick-label", x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg); t.textContent = v;
+      }
+      const band = iw / 16;
+      const bw = Math.max(3, Math.min(24, (band - 8) / 2 - 1));
+      const tip = tooltipFor(plot);
+      weeks.forEach((w, i) => {
+        const cx = m.l + band * i + band / 2;
+        if (w === 1 || w % 4 === 0) { const t = el("text", { class: "tick-label", x: cx, y: H - 8, "text-anchor": "middle" }, svg); t.textContent = `Wk ${w}`; }
+        [[tours[i], "--series-1", "Tours"], [apps[i], "--series-2", "Applications"]].forEach(([v, c, name], k) => {
+          const bx = k === 0 ? cx - bw - 1 : cx + 1;
+          const bar = el("path", { class: "bar", d: topRounded(bx, y(v), bw, y(0) - y(v)), fill: css(c), tabindex: 0, "aria-label": `Week ${w}: ${v} ${name.toLowerCase()}` }, svg);
+          const show = () => tip.show(cx, y(v), `Week ${w}`, [
+            { value: tours[i], label: "Tours", color: css("--series-1") },
+            { value: apps[i], label: "Applications", color: css("--series-2") },
+          ]);
+          bar.addEventListener("pointerenter", show); bar.addEventListener("focus", show);
+          bar.addEventListener("pointerleave", tip.hide); bar.addEventListener("blur", tip.hide);
+        });
+      });
+    }
+
+    /* ---------------- Funnel (ordinal ramp) ---------------- */
+    function drawFunnel() {
+      const plot = document.getElementById("chart-funnel");
+      plot.replaceChildren();
+      const W = plot.clientWidth;
+      const narrow = W < 560;
+      const labelW = narrow ? 0 : 130, rowH = narrow ? 52 : 40, gap = 8;
+      const H = funnel.length * (rowH + gap);
+      const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": "Funnel: 1,440 leads, 250 tours, 108 applications, 98 approved, 92 leases signed." }, plot);
+      const valueRoom = narrow ? 0 : 210;
+      const maxW = W - labelW - valueRoom;
+      const scale = (v) => Math.max(6, (v / funnel[0].value) * maxW);
+      const tip = tooltipFor(plot);
+      funnel.forEach((f, i) => {
+        const yy = i * (rowH + gap);
+        const barY = narrow ? yy + 20 : yy + 8;
+        const barH = narrow ? 24 : 24;
+        if (!narrow) { const t = el("text", { class: "direct-label muted", x: 0, y: yy + 25 }, svg); t.textContent = f.stage; }
+        const w = narrow ? Math.max(6, (f.value / funnel[0].value) * (W - 140)) : scale(f.value);
+        const bar = el("path", { class: "bar", d: rightRounded(labelW, barY, w, barH), fill: css(`--ord-${i + 1}`), tabindex: 0, "aria-label": `${f.stage}: ${fmt(f.value)}, ${f.note}` }, svg);
+        const show = () => tip.show(labelW + w, barY, f.stage, [{ value: fmt(f.value), label: f.note }]);
+        bar.addEventListener("pointerenter", show); bar.addEventListener("focus", show);
+        bar.addEventListener("pointerleave", tip.hide); bar.addEventListener("blur", tip.hide);
+        const v = el("text", { class: "direct-label", x: labelW + w + 10, y: barY + 17 }, svg); v.textContent = fmt(f.value);
+        const n = el("text", { class: "direct-label muted", x: labelW + w + 10 + (fmt(f.value).length * 8 + 10), y: barY + 17 }, svg); n.textContent = f.note;
+        if (narrow) { const t = el("text", { class: "direct-label muted", x: 0, y: yy + 13 }, svg); t.textContent = f.stage; }
+      });
+    }
+
+    /* ---------------- Horizontal bars (single series) ---------------- */
+    function drawHBars(id, data, valueOf, labelOf, aria) {
+      const plot = document.getElementById(id);
+      plot.replaceChildren();
+      const W = plot.clientWidth;
+      const rowH = 34;
+      const labelW = Math.min(150, W * 0.38);
+      const H = data.length * rowH;
+      const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, height: H, role: "img", "aria-label": aria }, plot);
+      const max = Math.max(...data.map(valueOf));
+      const maxW = W - labelW - 56;
+      const tip = tooltipFor(plot);
+      data.forEach((d, i) => {
+        const yy = i * rowH;
+        const t = el("text", { class: "direct-label muted", x: 0, y: yy + 21 }, svg); t.textContent = d.name;
+        const w = Math.max(4, (valueOf(d) / max) * maxW);
+        const bar = el("path", { class: "bar", d: rightRounded(labelW, yy + 8, w, 18), fill: css("--series-1"), tabindex: 0, "aria-label": `${d.name}: ${labelOf(d)}` }, svg);
+        const show = () => tip.show(labelW + w, yy + 8, d.name, [{ value: labelOf(d), label: id === "chart-sources" ? `${pct(d.leads / totals.leads)} of all leads` : `${d.tours} tours from ${fmt(d.leads)} leads` }]);
+        bar.addEventListener("pointerenter", show); bar.addEventListener("focus", show);
+        bar.addEventListener("pointerleave", tip.hide); bar.addEventListener("blur", tip.hide);
+        const v = el("text", { class: "direct-label", x: labelW + w + 8, y: yy + 21 }, svg); v.textContent = labelOf(d);
+      });
+    }
+
+    /* ---------------- Tables ---------------- */
+    table(document.getElementById("table-pace"), ["Week", "Committed", "Target pace"], weeks.map((w, i) => [`Week ${w}`, committedCum[i], target[i]]), [1, 2]);
+    table(document.getElementById("table-weekly"), ["Week", "Leads", "Tours", "Applications"], weeks.map((w, i) => [`Week ${w}`, leads[i], tours[i], apps[i]]), [1, 2, 3]);
+    table(document.getElementById("table-funnel"), ["Stage", "Count", "Conversion"], funnel.map((f) => [f.stage, fmt(f.value), f.note]), [1]);
+    table(document.getElementById("table-sources"), ["Source", "Leads", "Share", "Tours", "Tour rate", "Cost per lead"],
+      sources.map((s) => [s.name, fmt(s.leads), pct(s.leads / totals.leads), s.tours, pct(s.tours / s.leads), s.cpl]), [1, 2, 3, 4, 5]);
+    table(document.getElementById("table-units"), ["Unit type", "Homes", "Committed", "Committed %", "Avg. rent achieved", "Avg. days to lease"],
+      units.map((u) => {
+        const wrap = document.createElement("span");
+        const meter = document.createElement("span"); meter.className = "unit-meter";
+        const fill = document.createElement("span"); fill.style.width = `${(u.committed / u.homes) * 100}%`; meter.append(fill);
+        wrap.append(meter, document.createTextNode(pct(u.committed / u.homes)));
+        return [u.type, u.homes, u.committed, wrap, `$${fmt(u.rent)}`, u.days];
+      }), [1, 2, 4, 5]);
+
+    const render = () => {
+      drawPace();
+      drawWeekly();
+      drawFunnel();
+      drawHBars("chart-sources", sources, (d) => d.leads, (d) => fmt(d.leads), "Bar chart of leads by source. Building website 490, listing sites 360, social media 230, referrals 130, signage and walk-ins 115, other 115.");
+      drawHBars("chart-tourrate", sources, (d) => d.tours / d.leads, (d) => pct(d.tours / d.leads), "Bar chart of tour rate by source. Referrals 31%, building website 22%, signage and walk-ins 21%, listing sites 14%, social media 9%, other 7%.");
+    };
+    render();
+    let t = 0;
+    new ResizeObserver(() => { clearTimeout(t); t = setTimeout(render, 100); }).observe(document.querySelector("main"));
+    if (document.fonts) document.fonts.ready.then(render);
+  })();
+  </script>
+</body>
+</html>
